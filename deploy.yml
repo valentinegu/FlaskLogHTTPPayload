@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  generation: 1
+  labels:
+    app: flask-log-http-payload
+  name: flask-log-http-payload
+  namespace: test
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: flask-log-http-payload
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: flask-log-http-payload
+    spec:
+      containers:
+      - image: valentineg/flaskloghttpayload:latest
+        imagePullPolicy: Always
+        name: flaskloghttpayload
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: flask-log-http-payload
+  name: flask-log-http-payload
+  namespace: test
+spec:
+  ports:
+  - port: 5000
+    protocol: TCP
+    targetPort: 5000
+  selector:
+    app: flask-log-http-payload
+  type: ClusterIP
