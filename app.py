@@ -1,5 +1,6 @@
 from flask import Flask, request
 from multiprocessing import Value
+from os import environ
 
 import logging
 forensics = Value('i', 0)
@@ -14,9 +15,11 @@ log = logging.getLogger()
 
 @app.route("/", defaults={"path": ""}, methods=['GET', 'POST', 'PUT'])
 @app.route("/<path:path>", methods=['GET', 'POST', 'PUT'])
-def echo(path):
+def srv(path):
     # Get raw data 
     data = request.get_data()
+    
+    # Create request counters
     counter = 0
     if request.path == "/forensics":
         with forensics.get_lock():
@@ -30,11 +33,12 @@ def echo(path):
         with rdata.get_lock():
             rdata.value += 1
             counter = rdata.value        
-    else
+    else:
         with defaultCounter.get_lock():
             defaultCounter.value += 1
             counter = defaultCounter.value
-                   
+    
+    returnMode = environ.get('RETURN_MODE')
     # Make sure data isn't empty
     if not data:
         return f'Request to {request.full_path} No data provided! counter={counter}'
@@ -43,13 +47,13 @@ def echo(path):
     if content_type == 'application/json':
         # Write to log
         log.info(f'Request to {request.full_path}, counter={counter}, data={request.json}')
-        return request.json
+        return request.json if returnMode == "ECHO" else "OK"
     elif content_type == 'application/x-www-form-urlencoded':
         log.info(f'Request to {request.full_path}, data={request.form}')
-        return request.form
+        return request.form if returnMode == "ECHO" else "OK"
     else:
         log.info(f'Request to {request.full_path}, counter={counter}, {data=}')
-        return data
+        return data if returnMode == "ECHO" else "OK"
 
 @app.route("/get_count")
 def get_count():
