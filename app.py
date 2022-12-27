@@ -59,7 +59,7 @@ def srv(path):
 def get_count():
     return {
         'access': access.value, 
-        'forensics': security.value, 
+        'forensics': forensics.value, 
         'rdata': rdata.value
     }
 if __name__ == "__main__":
